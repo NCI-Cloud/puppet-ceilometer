@@ -71,39 +71,26 @@
 #   (optional) Identify user and project names from polled metrics.
 #   Defaults to $::os_service_default.
 #
-# DEPRECATED PARAMETERS
-#
-# [*coordination_url*]
-#   (Optional) The url to use for distributed group membership coordination.
-#   Defaults to undef.
-#
 class ceilometer::agent::polling (
-  $manage_service            = true,
-  $enabled                   = true,
-  $package_ensure            = 'present',
-  $central_namespace         = true,
-  $compute_namespace         = true,
-  $ipmi_namespace            = true,
-  $instance_discovery_method = $::os_service_default,
-  $resource_update_interval  = $::os_service_default,
-  $resource_cache_expiry     = $::os_service_default,
-  $manage_polling            = false,
-  $polling_interval          = 600,
-  $polling_meters            = $::ceilometer::params::polling_meters,
-  $polling_config            = undef,
-  $batch_size                = $::os_service_default,
-  $tenant_name_discovery     = $::os_service_default,
-  # DEPRECATED PARAMETERS
-  $coordination_url          = undef,
+  Boolean $manage_service       = true,
+  Boolean $enabled              = true,
+  $package_ensure               = 'present',
+  Boolean $central_namespace    = true,
+  Boolean $compute_namespace    = true,
+  Boolean $ipmi_namespace       = true,
+  $instance_discovery_method    = $facts['os_service_default'],
+  $resource_update_interval     = $facts['os_service_default'],
+  $resource_cache_expiry        = $facts['os_service_default'],
+  Boolean $manage_polling       = false,
+  $polling_interval             = 600,
+  $polling_meters               = $::ceilometer::params::polling_meters,
+  Optional[Hash]$polling_config = undef,
+  $batch_size                   = $facts['os_service_default'],
+  $tenant_name_discovery        = $facts['os_service_default'],
 ) inherits ceilometer {
 
   include ceilometer::deps
   include ceilometer::params
-
-  if $coordination_url != undef {
-    warning('The coordination_url parameter has been deprecated. Use ceilometer::coordination instead')
-    include ceilometer::coordination
-  }
 
   if $central_namespace {
     $central_namespace_name = 'central'
@@ -199,7 +186,6 @@ class ceilometer::agent::polling (
 
   if $manage_polling {
     if $polling_config {
-      validate_legacy(Hash, 'validate_hash', $polling_config)
       $polling_content = to_yaml($polling_config)
     } else {
       $polling_content = template('ceilometer/polling.yaml.erb')

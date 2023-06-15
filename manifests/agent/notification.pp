@@ -83,39 +83,24 @@
 #   Defaults to ['gnocchi://'], If you are using collector
 #   override this to notifier:// instead.
 #
-# DEPRECATED PARAMETERS
-#
-# [*notification_workers*]
-#   (Optional) Number of workers for notification service (integer value).
-#   Defaults to $::os_service_default.
-#
 class ceilometer::agent::notification (
-  $manage_service            = true,
-  $enabled                   = true,
-  $ack_on_event_error        = $::os_service_default,
-  $disable_non_metric_meters = $::os_service_default,
-  $workers                   = $::os_service_default,
-  $messaging_urls            = $::os_service_default,
-  $package_ensure            = 'present',
-  $manage_event_pipeline     = false,
-  $event_pipeline_publishers = ['gnocchi://'],
-  $event_pipeline_config     = undef,
-  $manage_pipeline           = false,
-  $pipeline_publishers       = ['gnocchi://'],
-  $pipeline_config           = undef,
-  # DEPRECATED PARAMETERS
-  $notification_workers      = undef,
+  Boolean $manage_service                     = true,
+  Boolean $enabled                            = true,
+  $ack_on_event_error                         = $facts['os_service_default'],
+  $disable_non_metric_meters                  = $facts['os_service_default'],
+  $workers                                    = $facts['os_service_default'],
+  $messaging_urls                             = $facts['os_service_default'],
+  $package_ensure                             = 'present',
+  Boolean $manage_event_pipeline              = false,
+  Array[String[1]] $event_pipeline_publishers = ['gnocchi://'],
+  Optional[Hash] $event_pipeline_config       = undef,
+  Boolean $manage_pipeline                    = false,
+  Array[String[1]] $pipeline_publishers       = ['gnocchi://'],
+  Optional[Hash] $pipeline_config             = undef,
 ) {
 
   include ceilometer::deps
   include ceilometer::params
-
-  if $notification_workers != undef {
-    warning('The notification_workers parameter is deprecated. Use the workers parameter instead')
-    $workers_real = $notification_workers
-  } else {
-    $workers_real = $workers
-  }
 
   package { 'ceilometer-notification':
     ensure => $package_ensure,
@@ -142,10 +127,8 @@ class ceilometer::agent::notification (
 
   if $manage_event_pipeline {
     if $event_pipeline_config {
-      validate_legacy(Hash, 'validate_hash', $event_pipeline_config)
       $event_pipeline_content = to_yaml($event_pipeline_config)
     } else {
-      validate_legacy(Array, 'validate_array', $event_pipeline_publishers)
       $event_pipeline_content = template('ceilometer/event_pipeline.yaml.erb')
     }
 
@@ -163,10 +146,8 @@ class ceilometer::agent::notification (
 
   if $manage_pipeline {
     if $pipeline_config {
-      validate_legacy(Hash, 'validate_hash', $pipeline_config)
       $pipeline_content = to_yaml($pipeline_config)
     } else {
-      validate_legacy(Array, 'validate_array', $pipeline_publishers)
       $pipeline_content = template('ceilometer/pipeline.yaml.erb')
     }
 
@@ -185,7 +166,7 @@ class ceilometer::agent::notification (
   ceilometer_config {
     'notification/ack_on_event_error'       : value => $ack_on_event_error;
     'notification/disable_non_metric_meters': value => $disable_non_metric_meters;
-    'notification/workers'                  : value => $workers_real;
+    'notification/workers'                  : value => $workers;
     'notification/messaging_urls'           : value => $messaging_urls, secret => true;
   }
 }

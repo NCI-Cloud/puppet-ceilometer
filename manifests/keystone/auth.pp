@@ -50,23 +50,21 @@
 #  }
 #
 class ceilometer::keystone::auth (
-  $password             = false,
-  $email                = 'ceilometer@localhost',
-  $auth_name            = 'ceilometer',
-  $configure_user       = true,
-  $configure_user_role  = true,
-  $region               = 'RegionOne',
-  $tenant               = 'services',
-  $roles                = ['admin'],
-  $system_scope         = 'all',
-  $system_roles         = [],
+  String[1] $password,
+  $email               = 'ceilometer@localhost',
+  $auth_name           = 'ceilometer',
+  $configure_user      = true,
+  $configure_user_role = true,
+  $region              = 'RegionOne',
+  $tenant              = 'services',
+  $roles               = ['admin'],
+  $system_scope        = 'all',
+  $system_roles        = [],
 ) {
 
   include ceilometer::deps
 
-  validate_legacy(String, 'validate_string', $password)
-
-  # Ceilometer rquires only its user, project, and role assignment.
+  # Ceilometer requires only its user, project, and role assignment.
   # service and endpoint should be disabled since ceilometer-api has been removed.
   keystone::resource::service_identity { 'ceilometer':
     configure_user      => $configure_user,
