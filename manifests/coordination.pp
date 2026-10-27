@@ -9,14 +9,12 @@
 #   Defaults to $::os_service_default
 #
 class ceilometer::coordination (
-  $backend_url    = $::os_service_default,
+  $backend_url    = $facts['os_service_default'],
 ) {
 
   include ceilometer::deps
 
-  $backend_url_real = pick($::ceilometer::agent::polling::coordination_url, $backend_url)
-
   oslo::coordination{ 'ceilometer_config':
-    backend_url => $backend_url_real
+    backend_url => $backend_url
   }
 }
